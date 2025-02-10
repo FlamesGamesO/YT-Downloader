@@ -261,8 +261,9 @@
           </h2>
           <p class="text-white text-lg leading-relaxed">
             This tool lets you fetch download links for any YouTube video using its URL.
-            It uses a backend proxy that calls <code>yt-dlp</code> to retrieve video details and available formats.
-            (In a production app, you’d integrate with a more robust downloading solution.)
+            It uses a backend proxy that calls <code>yt-dlp</code> (or <code>ytdl-core</code> in Node.js)
+            to retrieve video details and available formats.
+            (Be aware that downloading YouTube videos may violate YouTube’s Terms of Service.)
           </p>
           <p class="mt-4 text-white text-lg leading-relaxed">
             Enjoy the interactive experience complete with dynamic particle backgrounds, custom cursors, and cool glitch animations!
@@ -370,7 +371,7 @@
         }
       }
 
-      /* Discord Lookup Functionality adapted for YouTube Downloader */
+      /* YouTube Downloader Functionality */
       const downloadForm = document.getElementById("downloadForm");
       downloadForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -392,8 +393,6 @@
             return;
           }
           const data = await response.json();
-
-          // Use the video ID to build a thumbnail URL if not provided by the API
           const videoId = extractVideoId(videoUrl);
           const thumbnailUrl = data.thumbnail || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
 
@@ -414,7 +413,10 @@
                     ${data.downloadLinks
                       .map(
                         link =>
-                          `<li class="text-sm text-white"><a class="underline hover:text-gray-300" href="${link.url}" target="_blank">${link.quality}</a></li>`
+                          `<li class="text-sm text-white">
+                            <a class="underline hover:text-gray-300" href="${link.url}" download target="_blank">${link.quality}</a>
+                            <span class="text-xs">(If it doesn't download automatically, right-click and choose "Save link as...")</span>
+                          </li>`
                       )
                       .join("")}
                   </ul>

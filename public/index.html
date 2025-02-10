@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Downloader</title>
+    
+    <!-- Browser Icon (Optional) -->
+    <!-- <link rel="icon" type="image/png" href="YOUR_FAVICON_URL_HERE" /> -->
+
+    <!-- Buy Me a Coffee Button (positioned via fixed container) -->
+    <style>
+      .buy-me-coffee {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 50;
+      }
+    </style>
+
+    <!-- Import Montserrat for striking header text -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas-Confetti for celebration effects -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- tsParticles for interactive particle background -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+
+    <style>
+      /* Global Styles & Customizations */
+      body {
+        font-family: "Montserrat", sans-serif;
+        cursor: none;
+        background: black;
+        overflow-x: hidden;
+        /* Grid background with moving lines (white accents) */
+        background-image: 
+          linear-gradient(0deg, transparent 24%, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.1) 26%, transparent 27%, transparent 74%, rgba(255,255,255,0.1) 75%, rgba(255,255,255,0.1) 76%, transparent 77%, transparent),
+          linear-gradient(90deg, transparent 24%, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.1) 26%, transparent 27%, transparent 74%, rgba(255,255,255,0.1) 75%, rgba(255,255,255,0.1) 76%, transparent 77%, transparent);
+        background-size: 50px 50px;
+        animation: gridMove 30s linear infinite;
+      }
+      @keyframes gridMove {
+        from { background-position: 0 0; }
+        to { background-position: 50px 50px; }
+      }
+      ::selection {
+        background: #ffffff;
+        color: black;
+      }
+      ::-moz-selection {
+        background: #ffffff;
+        color: black;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: black;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #ffffff;
+        border-radius: 10px;
+      }
+      /* Custom Cursor */
+      #customCursor {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #ffffff;
+        pointer-events: none;
+        mix-blend-mode: difference;
+        transform: translate(-50%, -50%);
+        transition: transform 0.1s ease-out, opacity 0.2s;
+        z-index: 9999;
+      }
+      /* Typewriter Header & Glitch Effects */
+      .typewriter h1 {
+        color: #ffffff;
+        overflow: hidden;
+        border-right: 0.15em solid #ffffff;
+        white-space: nowrap;
+        margin: 0 auto;
+        letter-spacing: 0.15em;
+        font-size: 3rem;
+        animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+      }
+      @keyframes typing {
+        from { width: 0; }
+        to { width: 100%; }
+      }
+      @keyframes blink-caret {
+        from, to { border-color: transparent; }
+        50% { border-color: #ffffff; }
+      }
+      .glitch:hover h1 {
+        animation: glitch 1s infinite;
+      }
+      @keyframes glitch {
+        0% { text-shadow: 2px 2px #ffffff, -2px -2px #ffffff; }
+        20% { text-shadow: -2px 2px #ffffff, 2px -2px #ffffff; }
+        40% { text-shadow: 2px -2px #ffffff, -2px 2px #ffffff; }
+        60% { text-shadow: -2px -2px #ffffff, 2px 2px #ffffff; }
+        80% { text-shadow: 2px 2px #ffffff, -2px -2px #ffffff; }
+        100% { text-shadow: -2px 2px #ffffff, 2px -2px #ffffff; }
+      }
+      /* Fade-in Animation for Sections */
+      @keyframes fadeInDown {
+        0% { opacity: 0; transform: translateY(-20px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeInDown { animation: fadeInDown 0.8s ease-out; }
+      /* Glassmorphism Card Style (border accent changed to white) */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 1rem;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      }
+      /* Modal Popup Styles */
+      #popupModal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+      }
+      #popupModal.active {
+        display: flex;
+        animation: modalFadeIn 0.5s forwards;
+      }
+      #popupModal.fadeOut {
+        animation: modalFadeOut 0.5s forwards;
+      }
+      @keyframes modalFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes modalFadeOut {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+      }
+      #popupModal .modal-content {
+        /* Glass style for modal content */
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        max-width: 90%;
+        width: 400px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        position: relative;
+      }
+      #popupModal .close-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.75rem;
+        font-size: 1.5rem;
+        cursor: pointer;
+        z-index: 10;
+        color: #ffffff;
+      }
+      /* Instructions text styling */
+      .instructions {
+        font-size: 0.85rem;
+        color: #d1d5db;
+        text-align: center;
+        margin-top: 1rem;
+      }
+    </style>
+  </head>
+  <body class="relative min-h-screen flex flex-col">
+    <!-- Particle Background -->
+    <div id="tsparticles" class="fixed inset-0 z-0"></div>
+    <!-- Custom Cursor -->
+    <div id="customCursor"></div>
+    <!-- Buy Me a Coffee Button -->
+    <div class="buy-me-coffee z-50">
+      <a
+        href="https://www.buymeacoffee.com/Aura2"
+        target="_blank"
+        class="bg-white hover:bg-gray-100 text-black font-bold py-3 px-6 rounded-full shadow-lg shadow-white/50 border-2 border-black transition-transform transform hover:scale-110"
+      >
+        ☕ Buy Me a Coffee
+      </a>
+    </div>
+    <!-- HEADER & NAVIGATION -->
+    <header class="text-center py-6 relative z-10 glitch">
+      <div class="typewriter">
+        <h1>YouTube Downloader</h1>
+      </div>
+      <nav class="mt-4">
+        <ul class="flex justify-center space-x-8 text-lg font-medium text-gray-300">
+          <li class="nav-link nav-active" data-tab="downloadSection">Download</li>
+          <li class="nav-link" data-tab="aboutSection">About</li>
+        </ul>
+      </nav>
+    </header>
+
+    <!-- MAIN CONTENT SECTION -->
+    <main class="flex-grow relative z-10 px-4">
+      <!-- YouTube Downloader Section -->
+      <section id="downloadSection" class="animate-fadeInDown">
+        <div class="glass-card p-8 max-w-lg mx-auto shadow-2xl">
+          <h2 class="text-2xl font-bold text-white mb-4 text-center">YouTube Downloader</h2>
+          <form id="downloadForm" class="space-y-4">
+            <div>
+              <label for="videoUrl" class="block text-gray-200 font-medium mb-2">
+                Enter YouTube Video URL
+              </label>
+              <input
+                type="text"
+                id="videoUrl"
+                name="videoUrl"
+                placeholder="e.g., https://www.youtube.com/watch?v=VIDEO_ID"
+                class="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-white bg-black text-white"
+              />
+            </div>
+            <button
+              type="submit"
+              class="w-full bg-gradient-to-r from-white to-white hover:from-gray-200 hover:to-gray-200 text-black font-bold py-2 rounded-md transition transform hover:scale-105"
+            >
+              Download Video
+            </button>
+          </form>
+          <!-- Instructions on how to get a YouTube URL -->
+          <p class="instructions">
+            To download a video, copy the URL from your browser's address bar on YouTube.
+          </p>
+        </div>
+      </section>
+
+      <!-- About Section -->
+      <section id="aboutSection" class="hidden animate-fadeInDown">
+        <div class="glass-card p-8 max-w-2xl mx-auto shadow-2xl">
+          <h2 class="text-2xl font-bold text-white mb-4 text-center">
+            About YouTube Downloader
+          </h2>
+          <p class="text-white text-lg leading-relaxed">
+            This tool lets you fetch download links for any YouTube video using its URL.
+            It uses a backend proxy that calls <code>yt-dlp</code> to retrieve video details and available formats.
+            (In a production app, you’d integrate with a more robust downloading solution.)
+          </p>
+          <p class="mt-4 text-white text-lg leading-relaxed">
+            Enjoy the interactive experience complete with dynamic particle backgrounds, custom cursors, and cool glitch animations!
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal Popup for Results -->
+    <div id="popupModal">
+      <div class="modal-content relative">
+        <span id="closeModal" class="close-btn">&times;</span>
+        <div id="modalContent" class="p-4"></div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="text-center py-4 text-gray-400 relative z-10">
+      &copy; 2025 YouTube Downloader. All rights reserved.
+    </footer>
+
+    <!-- JAVASCRIPT -->
+    <script>
+      // Ensure the modal is hidden by default
+      document.getElementById("popupModal").style.display = "none";
+
+      /* Navigation Handlers */
+      const navLinks = document.querySelectorAll(".nav-link");
+      const downloadSection = document.getElementById("downloadSection");
+      const aboutSection = document.getElementById("aboutSection");
+
+      navLinks.forEach(link => {
+        link.addEventListener("click", () => {
+          navLinks.forEach(l => l.classList.remove("nav-active"));
+          link.classList.add("nav-active");
+          downloadSection.classList.add("hidden");
+          aboutSection.classList.add("hidden");
+          document.getElementById(link.getAttribute("data-tab")).classList.remove("hidden");
+        });
+      });
+
+      /* Custom Cursor Handler */
+      const customCursor = document.getElementById("customCursor");
+      document.addEventListener("mousemove", (e) => {
+        customCursor.style.top = e.clientY + "px";
+        customCursor.style.left = e.clientX + "px";
+      });
+      document.addEventListener("mouseleave", () => {
+        customCursor.style.opacity = 0;
+      });
+      document.addEventListener("mouseenter", () => {
+        customCursor.style.opacity = 1;
+      });
+
+      /* Initialize tsParticles for Background Particles */
+      tsParticles.load("tsparticles", {
+        fpsLimit: 60,
+        background: { color: { value: "transparent" } },
+        particles: {
+          number: { value: 60, density: { enable: true, area: 800 } },
+          color: { value: "#ffffff" },
+          shape: { type: "circle" },
+          opacity: { value: 0.5, random: true },
+          size: { value: 3, random: true },
+          move: {
+            enable: true,
+            speed: 1,
+            direction: "none",
+            outModes: { default: "out" }
+          }
+        },
+        detectRetina: true
+      });
+
+      /* Modal Popup Handlers */
+      const popupModal = document.getElementById("popupModal");
+      const modalContent = document.getElementById("modalContent");
+      const closeModal = document.getElementById("closeModal");
+
+      closeModal.addEventListener("click", () => {
+        popupModal.classList.add("fadeOut");
+        setTimeout(() => {
+          popupModal.classList.remove("active", "fadeOut");
+          popupModal.style.display = "none";
+        }, 500);
+      });
+      // Close modal when clicking outside the modal content
+      popupModal.addEventListener("click", (e) => {
+        if (e.target === popupModal) {
+          popupModal.classList.add("fadeOut");
+          setTimeout(() => {
+            popupModal.classList.remove("active", "fadeOut");
+            popupModal.style.display = "none";
+          }, 500);
+        }
+      });
+
+      /* Helper: Extract video ID from a YouTube URL */
+      function extractVideoId(url) {
+        try {
+          const urlObj = new URL(url);
+          return urlObj.searchParams.get("v") || urlObj.pathname.split("/").pop() || "default";
+        } catch (error) {
+          return "default";
+        }
+      }
+
+      /* Discord Lookup Functionality adapted for YouTube Downloader */
+      const downloadForm = document.getElementById("downloadForm");
+      downloadForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const videoUrl = document.getElementById("videoUrl").value.trim();
+        if (!videoUrl) {
+          alert("Please enter a YouTube Video URL.");
+          return;
+        }
+        // Show the modal with a loading message
+        modalContent.innerHTML = `<p class="text-center text-gray-300">Processing...</p>`;
+        popupModal.style.display = "flex";
+        popupModal.classList.add("active");
+
+        try {
+          const response = await fetch(`/api/download?url=${encodeURIComponent(videoUrl)}`);
+          if (!response.ok) {
+            const errorData = await response.json();
+            modalContent.innerHTML = `<p class="text-center text-red-400">Error: ${errorData.error}</p>`;
+            return;
+          }
+          const data = await response.json();
+
+          // Use the video ID to build a thumbnail URL if not provided by the API
+          const videoId = extractVideoId(videoUrl);
+          const thumbnailUrl = data.thumbnail || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+
+          // Build the modal popup HTML content
+          const popupHTML = `
+            <div class="relative">
+              <!-- Video Thumbnail Section -->
+              <div class="h-40 w-full">
+                <img src="${thumbnailUrl}" alt="Video Thumbnail" class="w-full h-full object-cover">
+              </div>
+              <!-- Details Section with improved readability -->
+              <div class="mt-4 pt-4 pb-4 text-center bg-black bg-opacity-70">
+                <p class="text-xl font-bold text-white">${data.title}</p>
+                <p class="text-sm text-white">Video ID: ${videoId}</p>
+                <div class="mt-2">
+                  <p class="text-sm text-white font-medium">Download Links:</p>
+                  <ul class="mt-1">
+                    ${data.downloadLinks
+                      .map(
+                        link =>
+                          `<li class="text-sm text-white"><a class="underline hover:text-gray-300" href="${link.url}" target="_blank">${link.quality}</a></li>`
+                      )
+                      .join("")}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          `;
+          modalContent.innerHTML = popupHTML;
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        } catch (error) {
+          console.error(error);
+          modalContent.innerHTML = `<p class="text-center text-red-400">An error occurred while processing the video.</p>`;
+        }
+      });
+    </script>
+  </body>
+</html>

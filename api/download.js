@@ -6,8 +6,13 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: "Missing URL parameter" });
   }
 
+  // Validate the YouTube URL before proceeding
+  if (!ytdl.validateURL(url)) {
+    return res.status(400).json({ error: "Invalid YouTube URL." });
+  }
+
   try {
-    // Get video information from YouTube
+    // Retrieve video info from YouTube
     const info = await ytdl.getInfo(url);
     const videoData = info.videoDetails;
     
@@ -19,7 +24,7 @@ module.exports = async (req, res) => {
         url: format.url
       }));
     
-    // Choose a thumbnail: use the highest resolution available.
+    // Use the highest resolution thumbnail available
     const thumbnails = videoData.thumbnails;
     const thumbnailUrl = thumbnails[thumbnails.length - 1].url;
 
